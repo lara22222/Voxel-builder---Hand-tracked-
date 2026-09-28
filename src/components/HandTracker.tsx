@@ -10,6 +10,7 @@ function HandTracker() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [status, setStatus] = useState("Loading hand tracker...");
+  const [gesture, setGesture] = useState("Open");
 
   useEffect(() => {
     let handLandmarker: HandLandmarker | null = null;
@@ -105,6 +106,22 @@ function HandTracker() {
       if (results.landmarks.length > 0) {
         setStatus("Hand detected");
 
+        const hand = results.landmarks[0];
+
+        const thumbTip = hand[4];
+        const indexTip = hand[8];
+
+        const distance = Math.sqrt(
+        Math.pow(thumbTip.x - indexTip.x, 2) +
+        Math.pow(thumbTip.y - indexTip.y, 2)
+        );
+
+        if (distance < 0.05) {
+        setGesture("PINCH");
+        } else {
+        setGesture("Open");
+        }
+
         for (const landmarks of results.landmarks) {
           drawingUtils.drawConnectors(
             landmarks,
@@ -143,8 +160,12 @@ function HandTracker() {
   return (
     <div>
       <p>{status}</p>
-
+      <p>
+        Gesture: <strong>{gesture}</strong>
+      </p>
       <div
+
+      
         style={{
             position: "relative",
             width: "100%",
