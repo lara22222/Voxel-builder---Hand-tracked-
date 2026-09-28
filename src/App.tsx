@@ -1,12 +1,12 @@
-import Webcam from "./components/Webcam";
+import HandTracker from "./components/HandTracker";
 
 function App() {
   return (
     <main>
       <h1>Hand Tracked Voxel Builder</h1>
-      <p>Camera test</p>
+      <p>MediaPipe hand tracking test</p>
 
-      <Webcam />
+      <HandTracker />
     </main>
   );
 }
