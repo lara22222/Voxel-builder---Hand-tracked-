@@ -1,4 +1,5 @@
 import HandTracker from "./components/HandTracker";
+import VoxelWorld from "./components/VoxelWorld";
 
 function App() {
   return (
@@ -7,6 +8,8 @@ function App() {
       <p>MediaPipe hand tracking test</p>
 
       <HandTracker />
+      
+      <VoxelWorld />
     </main>
   );
 }
