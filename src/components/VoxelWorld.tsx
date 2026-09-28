@@ -86,12 +86,28 @@ function VoxelWorld() {
 
         if (intersections.length === 0) return;
 
-        const point = intersections[0].point;
+        const hit = intersections[0];
 
-        const x = Math.floor(point.x) + 0.5;
-        const z = Math.floor(point.z) + 0.5;
+        let x: number;
+        let y: number;
+        let z: number;
 
-        const key = `${x},0.5,${z}`;
+        if (hit.object === floor) {
+            // Clicked the floor
+            x = Math.floor(hit.point.x) + 0.5;
+            y = 0.5;
+            z = Math.floor(hit.point.z) + 0.5;
+        } else {
+            // Clicked an existing voxel
+            const clickedVoxel = hit.object as THREE.Mesh;
+            const normal = hit.face!.normal;
+
+            x = clickedVoxel.position.x + normal.x;
+            y = clickedVoxel.position.y + normal.y;
+            z = clickedVoxel.position.z + normal.z;
+        }
+
+        const key = `${x},${y},${z}`;
 
         if (occupied.has(key)) return;
 
@@ -102,7 +118,7 @@ function VoxelWorld() {
             material.clone()
         );
 
-        voxel.position.set(x, 0.5, z);
+        voxel.position.set(x, y, z);
 
         scene.add(voxel);
         voxels.push(voxel);
