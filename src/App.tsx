@@ -22,7 +22,10 @@ function App() {
   {fingerPosition.y.toFixed(2)}
 </p>
       
-      <VoxelWorld />
+       <VoxelWorld
+        fingerX={fingerPosition.x}
+        fingerY={fingerPosition.y}
+      />
     </main>
   );
 }

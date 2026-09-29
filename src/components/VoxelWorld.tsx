@@ -2,8 +2,22 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
-function VoxelWorld() {
+type VoxelWorldProps = {
+  fingerX: number;
+  fingerY: number;
+};
+
+function VoxelWorld({
+  fingerX,
+  fingerY,
+}: VoxelWorldProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const fingerXRef = useRef(fingerX);
+  const fingerYRef = useRef(fingerY);
+
+  fingerXRef.current = fingerX;
+  fingerYRef.current = fingerY;
 
   useEffect(() => {
     const container = containerRef.current;
@@ -80,9 +94,49 @@ function VoxelWorld() {
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
+    const finger = new THREE.Vector2();
     const occupied = new Set<string>();
     const voxels: THREE.Mesh[] = [];
 
+    function updateFingerTarget() {
+      finger.x = (1 - fingerXRef.current) * 2 - 1;
+      finger.y = -(fingerYRef.current * 2 - 1);
+
+      raycaster.setFromCamera(finger, camera);
+    
+    const intersections = raycaster.intersectObjects([
+      ...voxels,
+      floor,
+    ]);
+
+    if (intersections.length === 0) {
+      ghostCube.visible = false;
+      return;
+    }
+
+    const hit = intersections[0];
+
+    if (hit.object === floor) {
+      ghostCube.position.set(
+        Math.floor(hit.point.x) + 0.5,
+        0.5,
+        Math.floor(hit.point.z) + 0.5
+      );
+    } else {
+      const clickedVoxel = hit.object as THREE.Mesh;
+      const normal = hit.face!.normal;
+
+      ghostCube.position.set(
+        clickedVoxel.position.x + normal.x,
+        clickedVoxel.position.y + normal.y,
+        clickedVoxel.position.z + normal.z
+      );
+    }
+
+    const key = `${ghostCube.position.x},${ghostCube.position.y},${ghostCube.position.z}`;
+
+    ghostCube.visible = !occupied.has(key);
+    }
     function handleMouseMove(event: MouseEvent) {
         const rect = renderer.domElement.getBoundingClientRect();
 
@@ -224,6 +278,7 @@ function VoxelWorld() {
 
     function animate() {
       controls.update();
+      updateFingerTarget();
 
       renderer.render(scene, camera);
 
