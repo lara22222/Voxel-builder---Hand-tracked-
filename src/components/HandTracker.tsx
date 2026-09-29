@@ -5,7 +5,12 @@ import {
   DrawingUtils,
 } from "@mediapipe/tasks-vision";
 
-function HandTracker() {
+type HandTrackerProps = {
+  onFingerMove?: (x: number, y: number) => void;
+};
+
+
+function HandTracker({ onFingerMove }: HandTrackerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -110,6 +115,7 @@ function HandTracker() {
 
         const thumbTip = hand[4];
         const indexTip = hand[8];
+        onFingerMove?.(indexTip.x, indexTip.y);
 
         const distance = Math.sqrt(
         Math.pow(thumbTip.x - indexTip.x, 2) +

@@ -63,10 +63,75 @@ function VoxelWorld() {
       color: 0x4f8cff,
     });
 
+    const ghostMaterial = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0.35,
+    });
+
+    const ghostCube = new THREE.Mesh(
+        geometry,
+        ghostMaterial
+    );
+
+    ghostCube.visible = false;
+
+    scene.add(ghostCube);
+
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     const occupied = new Set<string>();
     const voxels: THREE.Mesh[] = [];
+
+    function handleMouseMove(event: MouseEvent) {
+        const rect = renderer.domElement.getBoundingClientRect();
+
+        mouse.x =
+            ((event.clientX - rect.left) / rect.width) * 2 - 1;
+
+        mouse.y =
+            -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+
+        const intersections = raycaster.intersectObjects([
+            ...voxels,
+            floor,
+        ]);
+
+        if (intersections.length === 0) {
+            ghostCube.visible = false;
+            return;
+        }
+
+        const hit = intersections[0];
+
+        if (hit.object === floor) {
+            ghostCube.position.set(
+            Math.floor(hit.point.x) + 0.5,
+            0.5,
+            Math.floor(hit.point.z) + 0.5
+            );
+        } else {
+            const clickedVoxel = hit.object as THREE.Mesh;
+            const normal = hit.face!.normal;
+
+            ghostCube.position.set(
+            clickedVoxel.position.x + normal.x,
+            clickedVoxel.position.y + normal.y,
+            clickedVoxel.position.z + normal.z
+            );
+        }
+
+        const key = `${ghostCube.position.x},${ghostCube.position.y},${ghostCube.position.z}`;
+
+        ghostCube.visible = !occupied.has(key);
+    }
+
+    renderer.domElement.addEventListener(
+      "mousemove",
+      handleMouseMove
+    );
 
     function handleClick(event: MouseEvent) {
         const rect = renderer.domElement.getBoundingClientRect();
@@ -173,12 +238,25 @@ function VoxelWorld() {
 
       window.removeEventListener("resize", handleResize);
 
+      renderer.domElement.removeEventListener(
+        "mousemove",
+        handleMouseMove
+      );
+      renderer.domElement.removeEventListener(
+        "click",
+        handleClick
+      );
+
       controls.dispose();
 
       geometry.dispose();
       material.dispose();
 
       renderer.dispose();
+
+      ghostMaterial.dispose();
+      floorGeometry.dispose();
+      floorMaterial.dispose();
 
       if (renderer.domElement.parentElement === container) {
         container.removeChild(renderer.domElement);
